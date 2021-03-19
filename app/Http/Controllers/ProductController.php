@@ -3,26 +3,37 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Supplier;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
+        $products =  Product::all();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'A list of all products',
+            'data' => $products
+        ]);
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function create()
+    public function create(): JsonResponse
     {
         //
     }
@@ -30,32 +41,76 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param Supplier $supplier
+     * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request, Supplier $supplier): JsonResponse
     {
-        //
+        // Validate input
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'description' => 'required',
+            'quantity' => 'required'
+        ]);
+
+        // Return validation message
+        if($validator->fails())
+        {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fill in the name',
+                'data'    => $validator->errors()
+            ],400);
+        }
+
+        $product =  new Product([
+            'name' => $request->input('name'),
+            'description' => $request->input('description'),
+            'quantity' => $request->input('quantity')
+        ]);
+
+        $product = $supplier->products()->sync($product);
+
+        // Check creation of product
+        if ($product)
+        {
+            return response()->json([
+                'success' => true,
+                'message' => ' Product saved successfully',
+            ]);
+        }
+        else
+        {
+            return response()->json([
+                'success' => false,
+                'message' => ' Product not saved. Try again',
+            ], 400);
+        }
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
+     * @param Product $product
+     * @return JsonResponse
      */
-    public function show(Product $product)
+    public function show(Product $product): JsonResponse
     {
-        //
+        return response()->json([
+            'success' => true,
+            'message' => 'Product found',
+            'data' => $product
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
+     * @param Product $product
+     * @return JsonResponse
      */
-    public function edit(Product $product)
+    public function edit(Product $product): JsonResponse
     {
         //
     }
@@ -63,23 +118,75 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param Product $product
+     * @return JsonResponse
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, Product $product): JsonResponse
     {
-        //
+        // Validate input
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'description' => 'required',
+            'quantity' => 'required'
+        ]);
+
+        // Return validation message
+        if($validator->fails())
+        {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fill in the name',
+                'data'    => $validator->errors()
+            ],400);
+        }
+
+        $product =  $product->update([
+            'name' => $request->input('name'),
+            'description' => $request->input('description'),
+            'quantity' => $request->input('quantity')
+        ]);
+
+        // Check creation of product
+        if ($product)
+        {
+            return response()->json([
+                'success' => true,
+                'message' => ' Product saved successfully',
+            ]);
+        }
+        else
+        {
+            return response()->json([
+                'success' => false,
+                'message' => ' Product not saved. Try again',
+            ], 400);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
+     * @param Product $product
+     * @return JsonResponse
      */
-    public function destroy(Product $product)
+    public function destroy(Product $product): JsonResponse
     {
-        //
+        try
+        {
+            $product->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product successfully deleted',
+            ]);
+        }
+        catch (Exception $e)
+        {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting product',
+            ], 400);
+        }
     }
 }
