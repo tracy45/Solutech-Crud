@@ -56,7 +56,6 @@ class UserController extends Controller
             'message' => 'User details retrieved.',
             'data' => $request->user()
         ]);
-
     }
 
     /**
