@@ -3,24 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class OrderController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
+        $orders =  Order::all();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'A list of all orders',
+            'data' => $orders
+        ]);
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function create()
     {
@@ -31,7 +41,7 @@ class OrderController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function store(Request $request)
     {
@@ -41,19 +51,23 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Order  $order
-     * @return \Illuminate\Http\Response
+     * @param Order $order
+     * @return JsonResponse
      */
-    public function show(Order $order)
+    public function show(Order $order): JsonResponse
     {
-        //
-    }
+        return response()->json([
+            'success' => true,
+            'message' => 'Order found',
+            'data' => $order
+        ]);
 
+    }
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Order  $order
-     * @return \Illuminate\Http\Response
+     * @param Order $order
+     * @return Response
      */
     public function edit(Order $order)
     {
@@ -64,8 +78,8 @@ class OrderController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Order  $order
-     * @return \Illuminate\Http\Response
+     * @param Order $order
+     * @return Response
      */
     public function update(Request $request, Order $order)
     {
@@ -75,11 +89,26 @@ class OrderController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Order  $order
-     * @return \Illuminate\Http\Response
+     * @param Order $order
+     * @return JsonResponse
      */
-    public function destroy(Order $order)
+    public function destroy(Order $order): JsonResponse
     {
-        //
+        try
+        {
+            $order->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order successfully deleted',
+            ]);
+        }
+        catch (Exception $e)
+        {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting order',
+            ], 400);
+        }
     }
 }

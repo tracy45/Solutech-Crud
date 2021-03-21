@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Supplier;
 use Exception;
@@ -9,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -64,16 +66,24 @@ class ProductController extends Controller
             ],400);
         }
 
-        $product =  new Product([
+        $product =  Product::create([
             'name' => $request->input('name'),
             'description' => $request->input('description'),
             'quantity' => $request->input('quantity')
         ]);
 
-        $product = $supplier->products()->sync($product);
+        $supplier->products()->sync($product);
 
-        // Check creation of product
-        if ($product)
+        $product = $product->refresh();
+
+        $order = Order::create([
+            'order_number' => Str::random()
+        ]);
+
+        $product->orders()->sync($order);
+
+        // Check creation
+        if ($order->refresh())
         {
             return response()->json([
                 'success' => true,
